@@ -56,7 +56,7 @@ public class IOSApplication implements Application{
         float scale = (float)(getIosVersion() >= 8 ? UIScreen.getMainScreen().getNativeScale() : UIScreen.getMainScreen()
         .getScale());
         if(scale >= 2.0f){
-            Log.info("[IOSApplication] scale: " + scale);
+            Log.info("[IOSApplication] Scale: " + scale);
             if(UIDevice.getCurrentDevice().getUserInterfaceIdiom() == UIUserInterfaceIdiom.Pad){
                 // it's an iPad!
                 displayScaleFactor = config.displayScaleLargeScreenIfRetina * scale;
@@ -79,7 +79,6 @@ public class IOSApplication implements Application{
         this.input = createInput();
         this.graphics = createGraphics(scale);
         Core.gl = Core.gl20 = graphics.gl20;
-        Core.gl30 = graphics.gl30;
         this.files = new IOSFiles();
         this.audio = new IOSAudio(config);
         this.net = new IOSNet(this);

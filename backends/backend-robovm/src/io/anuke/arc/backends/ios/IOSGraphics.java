@@ -1,11 +1,11 @@
 package io.anuke.arc.backends.ios;
 
-import io.anuke.arc.backends.ios.custom.HWMachine;
 import io.anuke.arc.Application;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
 import io.anuke.arc.Graphics;
 import io.anuke.arc.Graphics.Cursor.SystemCursor;
+import io.anuke.arc.backends.ios.custom.HWMachine;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.graphics.GL20;
 import io.anuke.arc.graphics.GL30;
@@ -27,13 +27,14 @@ import org.robovm.objc.annotation.Method;
 import org.robovm.rt.bro.annotation.Callback;
 import org.robovm.rt.bro.annotation.Pointer;
 
+import java.lang.reflect.Proxy;
+
 public class IOSGraphics extends Graphics{
-    private static final String tag = "IOSGraphics";
+    private static final String tag = "[IOSGraphics] ";
 
     IOSApplication app;
     IOSInput input;
     GL20 gl20;
-    GL30 gl30;
     int width;
     int height;
     long lastFrameTime;
@@ -69,11 +70,8 @@ public class IOSGraphics extends Graphics{
         width = (int)bounds.getWidth();
         height = (int)bounds.getHeight();
 
-        if(context == null){
-            context = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
-            gl20 = new IOSGL20();
-            gl30 = null;
-        }
+        context = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
+        gl20 = makeGL();
 
         view = new GLKView(new CGRect(0, 0, bounds.getWidth(), bounds.getHeight()), context){
             @Method(selector = "touchesBegan:withEvent:")
@@ -117,7 +115,7 @@ public class IOSGraphics extends Graphics{
         this.app = app;
         this.input = input;
 
-        int r = 0, g = 0, b = 0, a = 0, depth = 0, stencil = 0, samples = 0;
+        int r , g, b, a, depth, stencil = 0, samples = 0;
         if(config.colorFormat == GLKViewDrawableColorFormat.RGB565){
             r = 5;
             g = 6;
@@ -143,14 +141,14 @@ public class IOSGraphics extends Graphics{
 
         String machineString = HWMachine.getMachineString();
         IOSDevice device = IOSDevice.getDevice(machineString);
-        if(device == null) Log.err(tag, "Machine ID: " + machineString + " not found, please report to LibGDX");
+        if(device == null) Log.err(tag + "Machine ID: " + machineString + " not found, please report to LibGDX");
         int ppi = device != null ? device.ppi : 163;
         density = device != null ? device.ppi / 160f : scale;
         ppiX = ppi;
         ppiY = ppi;
         ppcX = ppiX / 2.54f;
         ppcY = ppiY / 2.54f;
-        Log.info(tag, "Display: ppi=" + ppi + ", density=" + density);
+        Log.info(tag + "Display: ppi=" + ppi + ", density=" + density);
 
         // time + FPS
         lastFrameTime = System.nanoTime();
@@ -158,6 +156,18 @@ public class IOSGraphics extends Graphics{
 
         appPaused = false;
     }
+
+    private IOSGL20 makeGL() {
+        IOSGL20 rgl = new IOSGL20();
+        return (IOSGL20) Proxy.newProxyInstance(
+                this.getClass().getClassLoader(),
+                new Class[]{IOSGL20.class},
+                (proxy, method, args) -> {
+                    Log.info("Invoking GL method '{0}'", method);
+                    return method.invoke(rgl, args);
+                });
+    }
+
 
     public void resume(){
         if(!appPaused) return;
@@ -251,32 +261,23 @@ public class IOSGraphics extends Graphics{
     @Override
     public void setGL20(GL20 gl20){
         this.gl20 = gl20;
-        if(gl30 == null){
-            Core.gl = gl20;
-            Core.gl20 = gl20;
-        }
+        Core.gl = gl20;
+        Core.gl20 = gl20;
     }
 
     @Override
     public boolean isGL30Available(){
-        return gl30 != null;
+        return false;
     }
 
     @Override
     public GL30 getGL30(){
-        return gl30;
+        return null;
     }
 
     @Override
     public void setGL30(GL30 gl30){
-        this.gl30 = gl30;
-        if(gl30 != null){
-            this.gl20 = gl30;
 
-            Core.gl = gl20;
-            Core.gl20 = gl20;
-            Core.gl30 = gl30;
-        }
     }
 
     @Override
