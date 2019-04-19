@@ -1,21 +1,15 @@
-package io.anuke.arc.maps.tiled;
+package io.anuke.arc.tiled;
 
 import io.anuke.arc.collection.IntMap;
 import io.anuke.arc.maps.MapProperties;
+import io.anuke.arc.maps.tiled.TiledMapTile;
 
 import java.util.Iterator;
 
-/** @brief Set of {@link TiledMapTile} instances used to compose a TiledMapLayer */
-public class TiledMapTileSet implements Iterable<TiledMapTile>{
+public class TileSet implements Iterable<TiledMapTile>{
     private String name;
-    private IntMap<TiledMapTile> tiles;
-    private MapProperties properties;
-
-    /** Creates empty tileset */
-    public TiledMapTileSet(){
-        tiles = new IntMap<>();
-        properties = new MapProperties();
-    }
+    private IntMap<TiledMapTile> tiles = new IntMap<>();
+    private MapProperties properties = new MapProperties();
 
     /** @return tileset's name */
     public String getName(){
@@ -41,12 +35,6 @@ public class TiledMapTileSet implements Iterable<TiledMapTile>{
         return tiles.get(id);
     }
 
-    /** @return iterator to tiles in this tileset */
-    @Override
-    public Iterator<TiledMapTile> iterator(){
-        return tiles.values().iterator();
-    }
-
     /**
      * Adds or replaces tile with that id
      * @param id the id of the {@link TiledMapTile} to add or replace.
@@ -64,5 +52,11 @@ public class TiledMapTileSet implements Iterable<TiledMapTile>{
     /** @return the size of this TiledMapTileSet. */
     public int size(){
         return tiles.size;
+    }
+
+    /** @return iterator to tiles in this tileset */
+    @Override
+    public Iterator<TiledMapTile> iterator(){
+        return tiles.values().iterator();
     }
 }

@@ -7,19 +7,12 @@ import io.anuke.arc.maps.tiled.TiledMapTile;
 
 /** @brief Represents a non changing {@link TiledMapTile} (can be cached) */
 public class StaticTiledMapTile implements TiledMapTile{
-
     private int id;
-
     private BlendMode blendMode = BlendMode.ALPHA;
-
     private MapProperties properties;
-
     private MapObjects objects;
-
     private TextureRegion textureRegion;
-
     private float offsetX;
-
     private float offsetY;
 
     /**

@@ -6,7 +6,6 @@ import java.util.Iterator;
 
 /** @brief Collection of {@link TiledMapTileSet} */
 public class TiledMapTileSets implements Iterable<TiledMapTileSet>{
-
     private Array<TiledMapTileSet> tilesets;
 
     /** Creates an empty collection of tilesets. */
