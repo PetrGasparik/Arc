@@ -1,6 +1,7 @@
 package io.anuke.arc.assets;
 
 import io.anuke.arc.assets.loaders.*;
+import io.anuke.arc.assets.loaders.LoadableLoader.*;
 import io.anuke.arc.assets.loaders.resolvers.InternalFileHandleResolver;
 import io.anuke.arc.audio.Music;
 import io.anuke.arc.audio.Sound;
@@ -72,6 +73,7 @@ public class AssetManager implements Disposable{
             setLoader(I18NBundle.class, new I18NBundleLoader(resolver));
             setLoader(Shader.class, new ShaderProgramLoader(resolver));
             setLoader(Cubemap.class, new CubemapLoader(resolver));
+            setLoader(Loadable.class, new LoadableLoader(resolver));
         }
         executor = new AsyncExecutor(1);
     }
@@ -324,7 +326,7 @@ public class AssetManager implements Disposable{
     /**
      * Loads a custom one-time 'asset' that knows how to load itself.
      * @param load the asset
-     */
+
     public synchronized AssetDescriptor loadRun(String name, Class<?> type, Runnable loadasync){
         if(getLoader(type) == null){
             setLoader(type, new CustomLoader(){
@@ -342,7 +344,7 @@ public class AssetManager implements Disposable{
     /**
      * Loads a custom one-time 'asset' that knows how to load itself.
      * @param load the asset
-     */
+
     public synchronized AssetDescriptor load(Loadable load){
         if(getLoader(load.getClass()) == null){
             setLoader(load.getClass(), new AsynchronousAssetLoader(new InternalFileHandleResolver()){
@@ -364,6 +366,27 @@ public class AssetManager implements Disposable{
             });
         }
         return load(load.getName(), load.getClass(), null);
+    }*/
+
+    public synchronized AssetDescriptor load(Runnable loadAsync, Runnable... dependencies){
+
+    }
+
+    public synchronized AssetDescriptor load(Runnable loadAsync, Runnable loadSync, Runnable... dependencies){
+        LoadableParameter param = new LoadableParameter(new Loadable(){
+            @Override
+            public void loadAsync(){
+                loadAsync.run();
+            }
+
+            @Override
+            public void loadSync(){
+                loadSync.run();
+            }
+        }, Array.with(dependencies).map(r -> new AssetDescriptor<>(r.hashCode() + "", Loadable.class)));
+        AssetDescriptor desc = new AssetDescriptor(loadAsync.hashCode() + "", Loadable.class, param);
+        load(desc);
+        return desc;
     }
 
     /**
@@ -832,4 +855,14 @@ public class AssetManager implements Disposable{
         return assetTypes.get(fileName);
     }
 
+    public abstract static class Loadable{
+
+        public void loadAsync(){
+
+        }
+
+        public void loadSync(){
+
+        }
+    }
 }
