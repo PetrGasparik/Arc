@@ -1,12 +1,18 @@
-package arc.graphics.g3d;
+package arc.graphics.gl;
 
-import arc.graphics.*;
-import arc.graphics.VertexAttributes.*;
-import arc.graphics.gl.*;
-import arc.math.geom.*;
-import arc.struct.*;
+import arc.struct.Array;
+import arc.graphics.Color;
+import arc.graphics.Mesh;
+import arc.graphics.VertexAttribute;
+import arc.graphics.VertexAttributes.Usage;
+import arc.math.Mat;
 
-public class ImmediateRenderer3D{
+/**
+ * Immediate mode rendering class for GLES 2.0. The renderer will allow you to specify vertices on the fly and provides a default
+ * shader for (unlit) rendering.</p> *
+ * @author mzechner
+ */
+public class VertexBatch{
     private final int maxVertices;
     private final Mesh mesh;
     private final int numTexCoords;
@@ -14,10 +20,9 @@ public class ImmediateRenderer3D{
     private final int normalOffset;
     private final int colorOffset;
     private final int texCoordOffset;
-    private final Matrix4 projModelView = new Matrix4();
+    private final Mat projModelView = new Mat();
     private final float[] vertices;
     private final String[] shaderUniformNames;
-
     private int primitiveType;
     private int vertexIdx;
     private int numSetTexCoords;
@@ -25,17 +30,17 @@ public class ImmediateRenderer3D{
     private Shader shader;
     private boolean ownsShader;
 
-    public ImmediateRenderer3D(boolean hasNormals, boolean hasColors, int numTexCoords){
+    public VertexBatch(boolean hasNormals, boolean hasColors, int numTexCoords){
         this(5000, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));
         ownsShader = true;
     }
 
-    public ImmediateRenderer3D(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords){
+    public VertexBatch(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords){
         this(maxVertices, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));
         ownsShader = true;
     }
 
-    public ImmediateRenderer3D(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords, Shader shader){
+    public VertexBatch(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords, Shader shader){
         this.maxVertices = maxVertices;
         this.numTexCoords = numTexCoords;
         this.shader = shader;
@@ -46,8 +51,10 @@ public class ImmediateRenderer3D{
         vertices = new float[maxVertices * (mesh.getVertexAttributes().vertexSize / 4)];
         vertexSize = mesh.getVertexAttributes().vertexSize / 4;
         normalOffset = mesh.getVertexAttribute(Usage.normal) != null ? mesh.getVertexAttribute(Usage.normal).offset / 4 : 0;
-        colorOffset = mesh.getVertexAttribute(Usage.colorPacked) != null ? mesh.getVertexAttribute(Usage.colorPacked).offset / 4 : 0;
-        texCoordOffset = mesh.getVertexAttribute(Usage.textureCoordinates) != null ? mesh.getVertexAttribute(Usage.textureCoordinates).offset / 4 : 0;
+        colorOffset = mesh.getVertexAttribute(Usage.colorPacked) != null ? mesh.getVertexAttribute(Usage.colorPacked).offset / 4
+        : 0;
+        texCoordOffset = mesh.getVertexAttribute(Usage.textureCoordinates) != null ? mesh
+        .getVertexAttribute(Usage.textureCoordinates).offset / 4 : 0;
 
         shaderUniformNames = new String[numTexCoords];
         for(int i = 0; i < numTexCoords; i++){
@@ -133,7 +140,7 @@ public class ImmediateRenderer3D{
         ownsShader = false;
     }
 
-    public void begin(Matrix4 projModelView, int primitiveType){
+    public void begin(Mat projModelView, int primitiveType){
         this.projModelView.set(projModelView);
         this.primitiveType = primitiveType;
     }
@@ -178,7 +185,7 @@ public class ImmediateRenderer3D{
     public void flush(){
         if(numVertices == 0) return;
         shader.begin();
-        shader.setUniformMatrix4("u_projModelView", projModelView.val);
+        shader.setUniformMatrix("u_projModelView", projModelView);
         for(int i = 0; i < numTexCoords; i++)
             shader.setUniformi(shaderUniformNames[i], i);
         mesh.setVertices(vertices, 0, vertexIdx);

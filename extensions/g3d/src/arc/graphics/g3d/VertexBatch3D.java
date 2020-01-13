@@ -1,18 +1,12 @@
-package arc.graphics.gl;
+package arc.graphics.g3d;
 
-import arc.struct.Array;
-import arc.graphics.Color;
-import arc.graphics.Mesh;
-import arc.graphics.VertexAttribute;
-import arc.graphics.VertexAttributes.Usage;
-import arc.math.Matrix3;
+import arc.graphics.*;
+import arc.graphics.VertexAttributes.*;
+import arc.graphics.gl.*;
+import arc.math.geom.*;
+import arc.struct.*;
 
-/**
- * Immediate mode rendering class for GLES 2.0. The renderer will allow you to specify vertices on the fly and provides a default
- * shader for (unlit) rendering.</p> *
- * @author mzechner
- */
-public class ImmediateRenderer{
+public class VertexBatch3D{
     private final int maxVertices;
     private final Mesh mesh;
     private final int numTexCoords;
@@ -20,27 +14,27 @@ public class ImmediateRenderer{
     private final int normalOffset;
     private final int colorOffset;
     private final int texCoordOffset;
-    private final Matrix3 projModelView = new Matrix3();
+    private final Mat3D projModelView = new Mat3D();
     private final float[] vertices;
     private final String[] shaderUniformNames;
-    private int primitiveType;
+
     private int vertexIdx;
     private int numSetTexCoords;
     private int numVertices;
     private Shader shader;
     private boolean ownsShader;
 
-    public ImmediateRenderer(boolean hasNormals, boolean hasColors, int numTexCoords){
+    public VertexBatch3D(boolean hasNormals, boolean hasColors, int numTexCoords){
         this(5000, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));
         ownsShader = true;
     }
 
-    public ImmediateRenderer(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords){
+    public VertexBatch3D(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords){
         this(maxVertices, hasNormals, hasColors, numTexCoords, createDefaultShader(hasNormals, hasColors, numTexCoords));
         ownsShader = true;
     }
 
-    public ImmediateRenderer(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords, Shader shader){
+    public VertexBatch3D(int maxVertices, boolean hasNormals, boolean hasColors, int numTexCoords, Shader shader){
         this.maxVertices = maxVertices;
         this.numTexCoords = numTexCoords;
         this.shader = shader;
@@ -51,10 +45,8 @@ public class ImmediateRenderer{
         vertices = new float[maxVertices * (mesh.getVertexAttributes().vertexSize / 4)];
         vertexSize = mesh.getVertexAttributes().vertexSize / 4;
         normalOffset = mesh.getVertexAttribute(Usage.normal) != null ? mesh.getVertexAttribute(Usage.normal).offset / 4 : 0;
-        colorOffset = mesh.getVertexAttribute(Usage.colorPacked) != null ? mesh.getVertexAttribute(Usage.colorPacked).offset / 4
-        : 0;
-        texCoordOffset = mesh.getVertexAttribute(Usage.textureCoordinates) != null ? mesh
-        .getVertexAttribute(Usage.textureCoordinates).offset / 4 : 0;
+        colorOffset = mesh.getVertexAttribute(Usage.colorPacked) != null ? mesh.getVertexAttribute(Usage.colorPacked).offset / 4 : 0;
+        texCoordOffset = mesh.getVertexAttribute(Usage.textureCoordinates) != null ? mesh.getVertexAttribute(Usage.textureCoordinates).offset / 4 : 0;
 
         shaderUniformNames = new String[numTexCoords];
         for(int i = 0; i < numTexCoords; i++){
@@ -140,11 +132,6 @@ public class ImmediateRenderer{
         ownsShader = false;
     }
 
-    public void begin(Matrix3 projModelView, int primitiveType){
-        this.projModelView.set(projModelView);
-        this.primitiveType = primitiveType;
-    }
-
     public void color(Color color){
         vertices[vertexIdx + colorOffset] = color.toFloatBits();
     }
@@ -164,11 +151,19 @@ public class ImmediateRenderer{
         numSetTexCoords += 2;
     }
 
+    public void normal(Vec3 v){
+        normal(v.x, v.y, v.z);
+    }
+
     public void normal(float x, float y, float z){
         final int idx = vertexIdx + normalOffset;
         vertices[idx] = x;
         vertices[idx + 1] = y;
         vertices[idx + 2] = z;
+    }
+
+    public void vertex(Vec3 v){
+        vertex(v.x, v.y, v.z);
     }
 
     public void vertex(float x, float y, float z){
@@ -182,10 +177,12 @@ public class ImmediateRenderer{
         numVertices++;
     }
 
-    public void flush(){
+    public void flush(Mat3D projModelView, int primitiveType){
+        this.projModelView.set(projModelView);
+
         if(numVertices == 0) return;
         shader.begin();
-        shader.setUniformMatrix("u_projModelView", projModelView);
+        shader.setUniformMatrix4("u_projModelView", projModelView.val);
         for(int i = 0; i < numTexCoords; i++)
             shader.setUniformi(shaderUniformNames[i], i);
         mesh.setVertices(vertices, 0, vertexIdx);
@@ -195,10 +192,6 @@ public class ImmediateRenderer{
         numSetTexCoords = 0;
         vertexIdx = 0;
         numVertices = 0;
-    }
-
-    public void end(){
-        flush();
     }
 
     public int getNumVertices(){

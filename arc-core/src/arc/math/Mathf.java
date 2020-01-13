@@ -8,7 +8,7 @@ public final class Mathf{
     public static final int[] signs = {-1, 1};
     public static final boolean[] booleans = {true, false};
     public static final float FLOAT_ROUNDING_ERROR = 0.000001f; // 32 bits
-    public static final float PI = 3.1415927f;
+    public static final float PI = 3.1415927f, pi = PI;
     public static final float PI2 = PI * 2;
     public static final float E = 2.7182818f;
     public static final float sqrt2 = Mathf.sqrt(2f);
@@ -31,9 +31,9 @@ public final class Mathf{
     static private final double CEIL = 0.9999999;
     static private final double BIG_ENOUGH_CEIL = 16384.999999999996;
     static private final double BIG_ENOUGH_ROUND = BIG_ENOUGH_INT + 0.5f;
-    static private final RandomXS128 seedr = new RandomXS128();
+    static private final Rand seedr = new Rand();
 
-    public static Random random = new RandomXS128();
+    public static Random random = new Rand();
 
     /** Returns the sine in radians from a lookup table. */
     public static float sin(float radians){
@@ -131,7 +131,11 @@ public final class Mathf{
     }
 
     public static float pow(float a, float b){
-        return (float) Math.pow(a, b);
+        return (float)Math.pow(a, b);
+    }
+
+    public static int pow(int a, int b){
+        return Mathf.ceil((float)Math.pow(a, b));
     }
 
     public static float range(float range){
@@ -401,8 +405,12 @@ public final class Mathf{
         return (int)(value + BIG_ENOUGH_ROUND) - BIG_ENOUGH_INT;
     }
 
-    public static float round(float value, float amount){
-        return (int)(value / amount) * amount;
+    public static float round(float value, float step){
+        return (int)(value / step) * step;
+    }
+
+    public static int round(float value, int step){
+        return (int)(value / step) * step;
     }
 
     /** Returns the closest integer to the specified float. This method will only properly round floats that are positive. */

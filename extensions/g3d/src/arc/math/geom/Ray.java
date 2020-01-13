@@ -5,7 +5,6 @@ package arc.math.geom;
  * @author badlogicgames@gmail.com
  */
 public class Ray{
-    static Vec3 tmp = new Vec3();
     public final Vec3 origin = new Vec3();
     public final Vec3 direction = new Vec3();
 
@@ -35,11 +34,6 @@ public class Ray{
      */
     public Vec3 getEndPoint(final Vec3 out, final float distance){
         return out.set(direction).scl(distance).add(origin);
-    }
-
-    /** {@inheritDoc} */
-    public String toString(){
-        return "ray [" + origin + ":" + direction + "]";
     }
 
     /**
@@ -79,6 +73,12 @@ public class Ray{
         this.origin.set(ray.origin);
         this.direction.set(ray.direction);
         return this;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString(){
+        return "ray [" + origin + ":" + direction + "]";
     }
 
     @Override
